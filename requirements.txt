@@ -2,3 +2,4 @@ streamlit
 torch
 torchvision
 transformers
+gradio==3.50.2
