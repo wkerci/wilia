@@ -8,21 +8,21 @@ import os
 
 # 🎛️ Configuração da página
 st.set_page_config(page_title="ResNet50 + Assistente IA", layout="centered")
-st.title("🖼️ Classificador com ResNet50 + 💬 Perguntas com IA")
+st.title("🖼️ Classificador com ResNet50 + 💬 Chat com IA")
 
-# 🔐 Chave da API (via variável de ambiente)
-openai_key = os.getenv("OPENAI_API_KEY")  # Garanta que essa variável esteja configurada no ambiente
+# 🔐 Chave da API
+openai_key = os.getenv("OPENAI_API_KEY")  # Configure esta variável no ambiente do Streamlit Cloud
 
 if not openai_key:
-    st.warning("⚠️ API Key da OpenAI não encontrada. Configure a variável 'OPENAI_API_KEY' no ambiente.")
+    st.warning("⚠️ API Key da OpenAI não encontrada. Adicione a variável 'OPENAI_API_KEY' no ambiente.")
 else:
     client = OpenAI(api_key=openai_key)
 
-# ⚙️ Carrega o modelo de imagem
+# ⚙️ Carregamento do modelo ResNet50
 modelo = resnet50(weights=ResNet50_Weights.DEFAULT)
 modelo.eval()
 
-# 🔧 Transformações para pré-processamento
+# 🔧 Transformações da imagem
 transformacao = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -33,7 +33,7 @@ transformacao = transforms.Compose([
     )
 ])
 
-# 📁 Upload de imagem
+# 📁 Upload da imagem
 arquivo = st.file_uploader("Selecione uma imagem para classificar...", type=["jpg", "jpeg", "png"])
 
 if arquivo:
@@ -55,7 +55,7 @@ if arquivo:
     except Exception as e:
         st.error(f"❌ Erro ao processar a imagem: {e}")
 else:
-    st.info("Envie uma imagem para iniciar a classificação.")
+    st.info("👆 Envie uma imagem para iniciar a classificação.")
 
 # 💬 Campo de Perguntas
 st.markdown("---")
@@ -66,4 +66,12 @@ pergunta = st.text_input("Digite sua pergunta:")
 if pergunta and openai_key:
     with st.spinner("Pensando..."):
         try:
-            resposta = client
+            resposta = client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": pergunta}]
+            )
+            texto = resposta.choices[0].message.content
+            st.info(texto)
+
+        except Exception as e:
+            st.error(f"❌ Erro na resposta do chatbot: {e}")
