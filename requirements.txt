@@ -1,8 +1,5 @@
 streamlit
 torch
 torchvision
-transformers
-gradio
-openai >= 1.0.0
-
-
+Pillow
+openai>=1.0.0
