@@ -4,16 +4,15 @@ from torchvision import transforms
 from PIL import Image
 import torch
 
-# Título do aplicativo
-st.set_page_config(page_title="Classificador ResNet50", layout="centered")
-st.title("🖼️ Classificador de Imagens com ResNet50")
-st.write("Envie uma imagem e veja qual classe o modelo identifica usando a arquitetura ResNet50 do PyTorch.")
+# Configurações iniciais
+st.set_page_config(page_title="Classificador com IA", layout="centered")
+st.title("🖼️ Classificador de Imagens + Chat IA")
 
-# Carrega o modelo com pesos atualizados recomendados
+# Carrega o modelo de visão computacional
 modelo = resnet50(weights=ResNet50_Weights.DEFAULT)
 modelo.eval()
 
-# Transformações para adequar a imagem ao modelo
+# Transforma imagem
 transformacao = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -25,7 +24,7 @@ transformacao = transforms.Compose([
 ])
 
 # Upload da imagem
-arquivo = st.file_uploader("📁 Escolha uma imagem...", type=["jpg", "jpeg", "png"])
+arquivo = st.file_uploader("📁 Envie uma imagem para classificar...", type=["jpg", "jpeg", "png"])
 
 if arquivo:
     try:
@@ -38,7 +37,6 @@ if arquivo:
             saida = modelo(entrada)
             indice = saida.argmax().item()
 
-        # Rótulo da classe
         rotulos = ResNet50_Weights.DEFAULT.meta["categories"]
         classe = rotulos[indice]
 
@@ -46,6 +44,21 @@ if arquivo:
 
     except Exception as e:
         st.error(f"⚠️ Erro ao processar a imagem: {e}")
-
 else:
-    st.info("Por favor, envie uma imagem para que o modelo possa fazer a classificação.")
+    st.info("Envie uma imagem para realizar a classificação.")
+
+# Campo de pergunta/chat
+st.markdown("---")
+st.header("💬 Pergunte algo ao app")
+
+pergunta = st.text_input("Escreva sua pergunta aqui:")
+
+if pergunta:
+    st.write("🤖 Resposta simulada do app:")
+    # Simulação de resposta (pode integrar com chatbot depois)
+    if "o que é resnet" in pergunta.lower():
+        st.info("ResNet é uma arquitetura de rede neural profunda usada para classificação de imagens. Ela introduz 'skip connections' para facilitar o treinamento de redes muito profundas.")
+    elif "quantas classes" in pergunta.lower():
+        st.info("O modelo ResNet50 pré-treinado com ImageNet identifica **1000 classes diferentes**.")
+    else:
+        st.info("Esse app está focado em reconhecimento de imagens. Para perguntas gerais, integração com chatbot pode ser adicionada futuramente!")
