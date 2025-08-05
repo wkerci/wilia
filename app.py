@@ -1,42 +1,30 @@
-import gradio as gr
-from transformers import pipeline
-import torchvision.models as models
-import torchvision.transforms as transforms
-from PIL import Image
+import streamlit as st
+from torchvision.models import resnet50, ResNet50_Weights
 import torch
+from PIL import Image
+from torchvision import transforms
 
-# Chatbot
-chatbot = pipeline("text-generation", model="gpt2")
+# Configuração do modelo
+st.title("Classificador de Imagens com ResNet50")
+st.write("Envie uma imagem e veja qual classe o modelo identifica.")
 
-def responder(pergunta):
-    resposta = chatbot(pergunta, max_length=100, do_sample=True)[0]["generated_text"]
-    return resposta
-
-# Reconhecimento de imagem
-modelo = models.resnet50(pretrained=True)
+# Carregando modelo com pesos atualizados
+modelo = resnet50(weights=ResNet50_Weights.DEFAULT)
 modelo.eval()
-transform = transforms.Compose([
+
+# Transformação da imagem para o modelo
+transformacao = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
-    transforms.ToTensor()
+    transforms.ToTensor(),
+    transforms.Normalize(
+        mean=[0.485, 0.456, 0.406],
+        std=[0.229, 0.224, 0.225]
+    )
 ])
 
-def reconhecer(imagem):
-    imagem_tensor = transform(imagem).unsqueeze(0)
-    with torch.no_grad():
-        saida = modelo(imagem_tensor)
-        _, classe = saida.max(1)
-    return f"Classe prevista: {classe.item()}"
+# Upload de imagem
+arquivo = st.file_uploader("Escolha uma imagem...", type=["jpg", "jpeg", "png"])
 
-def app(pergunta, imagem):
-    texto = responder(pergunta)
-    imagem_resp = reconhecer(imagem)
-    return texto, imagem_resp
-
-interface = gr.Interface(fn=app,
-                         inputs=["text", "image"],
-                         outputs=["text", "text"],
-                         title="IA Total: Chat + Imagem",
-                         description="Faça uma pergunta ou envie uma imagem para ser identificada.")
-
-interface.launch()
+if arquivo:
+    imagem
