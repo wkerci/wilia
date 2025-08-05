@@ -3,21 +3,26 @@ from torchvision.models import resnet50, ResNet50_Weights
 from torchvision import transforms
 from PIL import Image
 import torch
-import openai
+from openai import OpenAI
 import os
 
-# 📄 Configuração da página
-st.set_page_config(page_title="ResNet50 + ChatGPT", layout="centered")
+# 🎛️ Configuração da página
+st.set_page_config(page_title="ResNet50 + Assistente IA", layout="centered")
 st.title("🖼️ Classificador com ResNet50 + 💬 Perguntas com IA")
 
-# 🌐 API Key OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")  # ou coloque direto: openai.api_key = "sua-chave-aqui"
+# 🔐 Chave da API (via variável de ambiente)
+openai_key = os.getenv("OPENAI_API_KEY")  # Garanta que essa variável esteja configurada no ambiente
 
-# ⚙️ Modelo ResNet50
+if not openai_key:
+    st.warning("⚠️ API Key da OpenAI não encontrada. Configure a variável 'OPENAI_API_KEY' no ambiente.")
+else:
+    client = OpenAI(api_key=openai_key)
+
+# ⚙️ Carrega o modelo de imagem
 modelo = resnet50(weights=ResNet50_Weights.DEFAULT)
 modelo.eval()
 
-# 🔧 Transformações
+# 🔧 Transformações para pré-processamento
 transformacao = transforms.Compose([
     transforms.Resize(256),
     transforms.CenterCrop(224),
@@ -29,7 +34,7 @@ transformacao = transforms.Compose([
 ])
 
 # 📁 Upload de imagem
-arquivo = st.file_uploader("Escolha uma imagem...", type=["jpg", "jpeg", "png"])
+arquivo = st.file_uploader("Selecione uma imagem para classificar...", type=["jpg", "jpeg", "png"])
 
 if arquivo:
     try:
@@ -48,9 +53,9 @@ if arquivo:
         st.success(f"🧠 Classe identificada: **{classe}**")
 
     except Exception as e:
-        st.error(f"Erro ao processar a imagem: {e}")
+        st.error(f"❌ Erro ao processar a imagem: {e}")
 else:
-    st.info("👆 Envie uma imagem para iniciar a classificação.")
+    st.info("Envie uma imagem para iniciar a classificação.")
 
 # 💬 Campo de Perguntas
 st.markdown("---")
@@ -58,15 +63,7 @@ st.header("Pergunte algo ao assistente IA")
 
 pergunta = st.text_input("Digite sua pergunta:")
 
-if pergunta:
+if pergunta and openai_key:
     with st.spinner("Pensando..."):
         try:
-            resposta = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": pergunta}]
-            )
-            texto_resposta = resposta.choices[0].message.content
-            st.info(texto_resposta)
-
-        except Exception as e:
-            st.error(f"❌ Erro ao conectar com o chatbot: {e}")
+            resposta = client
